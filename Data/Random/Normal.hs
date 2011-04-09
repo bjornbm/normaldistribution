@@ -6,59 +6,65 @@
    Stability  : Stable
    Portability: Haskell 98
 
-Zero-dependency normally distributed random numbers.
-
 This purpose of this library is to have a simple API and no
 dependencies beyond Haskell 98 in order to let you produce normally
-distributed random values as soon as possible withe a minimum of
-fuss. This library does not attempt to be blazingly fast nor to
-pass stringent tests of randomness. It attempts to be very easy to
-use while being good enough for many applications (simulations,
-games...). The API is largely analogous to a subset of "System.Random".
-Example use:
+distributed random values with a minimum of fuss. This library does
+/not/ attempt to be blazingly fast nor to pass stringent tests of
+randomness. It attempts to be very easy to install and use while
+being \"good enough\" for many applications (simulations, games, etc.).
+The API builds upon and is largely analogous to that of the Haskell
+98 @Random@ module (more recently @System.Random@).
 
 Pure:
 
-> (sample,g) = normal  randomGen   -- using a 'System.Random.RandomGen'
-> samples    = normals randomGen   -- infinite list
-> samples2   = mkNormals 108314    -- infinite list using a seed
-
-With custom mean and standard deviation, e.g.:
-
-> sample'  = normal'  (mean,sigma) stdGen
-> samples' = normals' (mean,sigma) stdGen
+> (sample,g) = normal  myRandomGen  -- using a Random.RandomGen
+> samples    = normals myRandomGen  -- infinite list
+> samples2   = mkNormals 10831452   -- infinite list using a seed
 
 In the IO monad:
 
-> sample   <- ioNormal
-> samples  <- ioNormals
-> sample'  <- ioNormal'  (mean,sigma)
-> samples' <- ioNormals' (mean,sigma)
+> sample   <- normalIO
+> samples  <- normalsIO  -- infinite list
 
-The library builds upon "System.Random" and uses the Central Limit
-Theorem to approximate normally distributed values from multiple
-uniformly distributed random values.
+With custom mean and standard deviation:
+
+> sample   = normal'    (mean,sigma) myRandomGen
+> samples  = normals'   (mean,sigma) myRandomGen
+> samples2 = mkNormals' (mean,sigma) 10831452
+
+> sample  <- normalIO'  (mean,sigma)
+> samples <- normalsIO' (mean,sigma)
+
+Internally the library uses the Central Limit Theorem to approximate
+normally distributed values from multiple uniformly distributed
+random values.
 
 -}
 
 
-module Data.Random.Normal
-  ( normal
+module Data.Random.Normal (
+  -- * Pure interface
+    normal
   , normals
   , mkNormals
-  , normalIO
-  , normalsIO
 
+  -- ** Custom mean and standard deviation
   , normal'
   , normals'
   , mkNormals'
+
+  -- * Using the global random number generator
+  , normalIO
+  , normalsIO
+
+  -- ** Custom mean and standard deviation
   , normalIO'
   , normalsIO'
 
   ) where
 
-import Data.List (mapAccumL)
-import System.Random
+import List (mapAccumL)  -- Data.List
+import Random            -- System.Random
 
 
 -- Normal distribution approximation
@@ -73,11 +79,11 @@ centralLimitTheorem ss = sum (take 12 ss) - 6
 
 
 -- API
--- ---
+-- ===
 -- | Takes a random number generator g, and returns a random value
 -- normally distributed with mean 0 and standard deviation 1,
 -- together with a new generator. This function is ananalogous to
--- 'System.Random.random'.
+-- 'Random.random'.
 normal :: (RandomGen g, Random a, Fractional a) => g -> (a,g)
 normal g = (centralLimitTheorem as, g')
   -- While The Haskell 98 report says "For fractional types, the
@@ -93,10 +99,11 @@ normals g = x:normals g' where (x,g') = normal g
 
 -- | Creates a infinite list of normally distributed random values
 -- from the provided random generator seed. (In the implementation
--- the seed is fed to 'Data.Random.mkStdGen' to produce the random
+-- the seed is fed to 'Random.mkStdGen' to produce the random
 -- number generator.)
 mkNormals :: (Random a, Fractional a) => Int -> [a]
 mkNormals = normals . mkStdGen
+
 
 -- | A variant of 'normal' that uses the global random number
 -- generator.
@@ -105,34 +112,36 @@ normalIO = fmap centralLimitTheorem $ mapM randomRIO $ repeat (0,1)
 
 -- | Creates a infinite list of normally distributed random values
 -- using the global random number generator. (In the implementation
--- 'System.Random.newStdGen' is used.)
+-- 'Random.newStdGen' is used.)
 normalsIO :: (Random a, Fractional a) => IO [a]
 normalsIO = fmap normals newStdGen
 
 
 -- With mean and standard deviation
 -- --------------------------------
--- | Analogous to 'normal' but uses the provided mean and standard
--- deviation.
+-- | Analogous to 'normal' but uses the supplied (mean, standard
+-- deviation).
 normal' :: (RandomGen g, Random a, Fractional a) => (a,a) -> g -> (a,g)
 normal' (mean, sigma) g = (x * sigma + mean, g') where (x, g') = normal g
 
--- | Analogous to 'normals' but uses the provided mean and standard
--- deviation.
+-- | Analogous to 'normals' but uses the supplied (mean, standard
+-- deviation).
 normals' :: (RandomGen g, Random a, Fractional a) => (a,a) -> g -> [a]
 normals' (mean, sigma) g = map (\x -> x * sigma + mean) (normals g)
 
--- | Analogous to 'mkNormals' but uses the provided mean and standard
--- deviation.
+-- | Analogous to 'mkNormals' but uses the supplied (mean, standard
+-- deviation).
 mkNormals' :: (Random a, Fractional a) => (a,a) -> Int -> [a]
 mkNormals' ms= normals' ms . mkStdGen
 
+
+-- | Analogous to 'normalIO' but uses the supplied (mean, standard
+-- deviation).
 normalIO' ::(Random a, Fractional a) => (a,a) -> IO a
 normalIO' (mean,sigma) = fmap (\x -> x * sigma + mean) normalIO
 
--- | Creates a infinite list of normally distributed random values
--- using the global random number generator. (In the implementation
--- 'System.Random.newStdGen' is used.)
+-- | Analogous to 'normalsIO' but uses the supplied (mean, standard
+-- deviation).
 normalsIO' :: (Random a, Fractional a) => (a,a) -> IO [a]
 normalsIO' ms = fmap (normals' ms) newStdGen
 

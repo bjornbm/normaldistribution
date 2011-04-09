@@ -5,29 +5,19 @@ License-File:        LICENSE
 Copyright:           Bjorn Buckwalter 2011
 Author:              Bjorn Buckwalter 
 Maintainer:          bjorn.buckwalter@gmail.com
-Stability:           stable
+Stability:           Stable
 --Homepage:            https://github.com/bjornbm/normaldistribution
 Synopsis:
 
-    Zero-dependency (haskell98) normally distributed random values.
+    Minimum fuss normally distributed random values.
 
 Description:
 
-    Dimensional-vectors provides basic linear algebra functions for
-    vectors and matrices where the elements are physical quantities
-    from the Dimensional library. Matrices and vectors can be
-    heterogeneous in the physical dimensions of their elements,
-    which while mathematically questionable is useful e.g. for
-    representing state vectors and covariance matrices. All
-    vector/matrix operations are statically guaranteed to be correct
-    w.r.t. the vector/matrix dimensions as well as the physical
-    dimensions of the elements.
-    The internal vector/matrix representation is slow but should
-    be readily exchangable for a faster one (e.g. GSLHaskell).
+    ddddd
 
 Category:            Math
 Build-Type:          Simple
-Build-Depends:       base < 5
+Build-Depends:       base < 5, haskell98 < 1.1
 Exposed-Modules:     Data.Random.Normal
 Extra-source-files:  README, LICENSE
 
