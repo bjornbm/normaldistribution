@@ -23,17 +23,17 @@ Pure:
 
 In the IO monad:
 
-> sample   <- normalIO
-> samples  <- normalsIO  -- infinite list
+> sample    <- normalIO
+> samples   <- normalsIO  -- infinite list
 
 With custom mean and standard deviation:
 
-> sample   = normal'    (mean,sigma) myRandomGen
-> samples  = normals'   (mean,sigma) myRandomGen
-> samples2 = mkNormals' (mean,sigma) 10831452
+> (sample,g) = normal'    (mean,sigma) myRandomGen
+> samples    = normals'   (mean,sigma) myRandomGen
+> samples2   = mkNormals' (mean,sigma) 10831452
 
-> sample  <- normalIO'  (mean,sigma)
-> samples <- normalsIO' (mean,sigma)
+> sample    <- normalIO'  (mean,sigma)
+> samples   <- normalsIO' (mean,sigma)
 
 Internally the library uses the Central Limit Theorem to approximate
 normally distributed values from multiple uniformly distributed
@@ -93,7 +93,7 @@ normal g = (centralLimitTheorem as, g')
 
 -- | Plural variant of 'normal', producing an infinite list of
 -- random values instead of returning a new generator. This function
--- is ananalogous to 'System.Random.randoms'.
+-- is ananalogous to 'Random.randoms'.
 normals :: (RandomGen g, Random a, Fractional a) => g -> [a]
 normals g = x:normals g' where (x,g') = normal g
 
@@ -106,7 +106,7 @@ mkNormals = normals . mkStdGen
 
 
 -- | A variant of 'normal' that uses the global random number
--- generator.
+-- generator. This function is analogous to 'Random.randomIO'.
 normalIO :: (Random a, Fractional a) => IO a
 normalIO = fmap centralLimitTheorem $ mapM randomRIO $ repeat (0,1)
 
