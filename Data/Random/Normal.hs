@@ -35,7 +35,7 @@ With custom mean and standard deviation:
 > sample    <- normalIO'  (mean,sigma)
 > samples   <- normalsIO' (mean,sigma)
 
-Internally the library uses the Box-Müller method to generate
+Internally the library uses the Box-Muller method to generate
 normally distributed values from uniformly distributed random values.
 If more than one sample is needed taking samples off an infinite
 list (created by e.g. 'normals') will be roughly twice as efficient
@@ -71,7 +71,7 @@ import Random            -- System.Random
 
 -- Normal distribution approximation
 -- ---------------------------------
--- | Box-Müller method for generating two normally distributed
+-- | Box-Muller method for generating two normally distributed
 -- independent random values from two uniformly distributed
 -- independent random values.
 boxMuller :: Floating a => a -> a -> (a,a)
@@ -79,7 +79,7 @@ boxMuller u1 u2 = (r * cos t, r * sin t) where r = sqrt (-2 * log u1)
                                                t = 2 * pi * u2
 
 -- | Convert a list of uniformly distributed random values into a
--- list of normally distributed random values. The Box-Müller
+-- list of normally distributed random values. The Box-Muller
 -- algorithms converts values two at a time, so if the input list
 -- has an uneven number of element the last one will be discarded.
 boxMullers :: Floating a => [a] -> [a]

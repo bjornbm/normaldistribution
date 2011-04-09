@@ -1,5 +1,5 @@
 Name:                normaldistribution
-Version:             1.0
+Version:             1.1
 License:             BSD3
 License-File:        LICENSE
 Copyright:           Bjorn Buckwalter 2011
@@ -43,9 +43,11 @@ Description:
     > sample    <- normalIO'  (mean,sigma)
     > samples   <- normalsIO' (mean,sigma)
     .
-    Internally the library uses the Central Limit Theorem to
-    approximate normally distributed values from multiple uniformly
-    distributed random values.
+    Internally the library uses the Box-Muller method to generate
+    normally distributed values from uniformly distributed random values.
+    If more than one sample is needed taking samples off an infinite
+    list (created by e.g. 'normals') will be roughly twice as efficient
+    as repetedly generating individual samples with e.g. 'normal'.
 
 Category:            Math, Statistics
 Build-Type:          Simple
