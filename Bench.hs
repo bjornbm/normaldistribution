@@ -1,4 +1,4 @@
-import Data.Complex
+import Data.List
 import Control.Monad
 import System.Random
 
@@ -30,14 +30,22 @@ mkBM = boxMullerL . randoms . mkStdGen
 seed = 14907417401
 
 main = defaultMain
-     [ bgroup "Double"  [ bench "gauss"   $ nf (take 1000 . mkGauss   :: Int -> [Double]) seed
-                        , bench "BM"      $ nf (take 1000 . mkBM      :: Int -> [Double]) seed
-                        , bench "CLT"     $ nf (take 1000 . mkNormals :: Int -> [Double]) seed
-                        ]
+     [ bgroup "Double"
+       [ bench "gauss"      $ nf (take 1000 . mkGauss   :: Int -> [Double]) seed
+       , bench "BM"         $ nf (take 1000 . mkBM      :: Int -> [Double]) seed
+       , bench "Normal"     $ nf (take 1000 . mkNormals :: Int -> [Double]) seed
+       , bench "ManyNormal" $ nf (take 1000 . manyNormal) seed
+       ]
      ]
 
+manyNormal :: Int -> [Double]
+manyNormal seed = snd $ mapAccumL (\g _ -> swap $ normal g) (mkStdGen seed) [1..]
+  where swap (x,y) = (y,x)
+
 {-
-ghc --make -O2 Bench && ./Bench
+ - Old benchmark of Central Limit Theorem.
+ -
+ - ghc --make -O2 Bench && ./Bench
 
 warming up
 estimating clock resolution...
