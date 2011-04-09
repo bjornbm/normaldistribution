@@ -35,9 +35,11 @@ With custom mean and standard deviation:
 > sample    <- normalIO'  (mean,sigma)
 > samples   <- normalsIO' (mean,sigma)
 
-Internally the library uses the Central Limit Theorem to approximate
-normally distributed values from multiple uniformly distributed
-random values.
+Internally the library uses the Box-Müller method to generate
+normally distributed values from uniformly distributed random values.
+If more than one sample is needed taking samples off an infinite
+list (created by e.g. 'normals') will be roughly twice as efficient
+as repetedly generating individual samples with e.g. 'normal'.
 
 -}
 
