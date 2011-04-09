@@ -69,13 +69,20 @@ import Random            -- System.Random
 
 -- Normal distribution approximation
 -- ---------------------------------
--- | Central limit theorem for approximating normally distributed
--- sampling. Takes a list of no less than twelve random uniformly
--- distributed samples in the range [0,1] and uses the first twelve
--- samples to approximate a normally distributed random sample with
--- mean 0 and standard deviation 1.
-centralLimitTheorem :: Fractional a => [a] -> a
-centralLimitTheorem ss = sum (take 12 ss) - 6
+-- | Box-Müller method for generating two normally distributed
+-- independent random values from two uniformly distributed
+-- independent random values.
+boxMuller :: Floating a => a -> a -> (a,a)
+boxMuller u1 u2 = (r * cos t, r * sin t) where r = sqrt (-2 * log u1)
+                                               t = 2 * pi * u2
+
+-- | Convert a list of uniformly distributed random values into a
+-- list of normally distributed random values. The Box-Müller
+-- algorithms converts values two at a time, so if the input list
+-- has an uneven number of element the last one will be discarded.
+boxMullers :: Floating a => [a] -> [a]
+boxMullers (u1:u2:us) = n1:n2:boxMullers us where (n1,n2) = boxMuller u1 u2
+boxMullers _          = []
 
 
 -- API
@@ -84,36 +91,40 @@ centralLimitTheorem ss = sum (take 12 ss) - 6
 -- normally distributed with mean 0 and standard deviation 1,
 -- together with a new generator. This function is ananalogous to
 -- 'Random.random'.
-normal :: (RandomGen g, Random a, Fractional a) => g -> (a,g)
-normal g = (centralLimitTheorem as, g')
+normal :: (RandomGen g, Random a, Floating a) => g -> (a,g)
+normal g0 = (fst $ boxMuller u1 u2, g2)
   -- While The Haskell 98 report says "For fractional types, the
   -- range is normally the semi-closed interval [0,1)" we will
   -- specify the range explicitely just to be sure.
-  where (g',as) = iterateN 12 (swap . randomR (0,1)) g
+  where
+     (u1,g1) = randomR (0,1) g0
+     (u2,g2) = randomR (0,1) g1
 
 -- | Plural variant of 'normal', producing an infinite list of
 -- random values instead of returning a new generator. This function
 -- is ananalogous to 'Random.randoms'.
-normals :: (RandomGen g, Random a, Fractional a) => g -> [a]
-normals g = x:normals g' where (x,g') = normal g
+normals :: (RandomGen g, Random a, Floating a) => g -> [a]
+normals = boxMullers . randoms
 
 -- | Creates a infinite list of normally distributed random values
 -- from the provided random generator seed. (In the implementation
 -- the seed is fed to 'Random.mkStdGen' to produce the random
 -- number generator.)
-mkNormals :: (Random a, Fractional a) => Int -> [a]
+mkNormals :: (Random a, Floating a) => Int -> [a]
 mkNormals = normals . mkStdGen
 
 
 -- | A variant of 'normal' that uses the global random number
 -- generator. This function is analogous to 'Random.randomIO'.
-normalIO :: (Random a, Fractional a) => IO a
-normalIO = fmap centralLimitTheorem $ mapM randomRIO $ repeat (0,1)
+normalIO :: (Random a, Floating a) => IO a
+normalIO = do u1 <- randomRIO (0,1)
+              u2 <- randomRIO (0,1)
+              return $ fst $ boxMuller u1 u2
 
 -- | Creates a infinite list of normally distributed random values
 -- using the global random number generator. (In the implementation
 -- 'Random.newStdGen' is used.)
-normalsIO :: (Random a, Fractional a) => IO [a]
+normalsIO :: (Random a, Floating a) => IO [a]
 normalsIO = fmap normals newStdGen
 
 
@@ -121,37 +132,26 @@ normalsIO = fmap normals newStdGen
 -- --------------------------------
 -- | Analogous to 'normal' but uses the supplied (mean, standard
 -- deviation).
-normal' :: (RandomGen g, Random a, Fractional a) => (a,a) -> g -> (a,g)
+normal' :: (RandomGen g, Random a, Floating a) => (a,a) -> g -> (a,g)
 normal' (mean, sigma) g = (x * sigma + mean, g') where (x, g') = normal g
 
 -- | Analogous to 'normals' but uses the supplied (mean, standard
 -- deviation).
-normals' :: (RandomGen g, Random a, Fractional a) => (a,a) -> g -> [a]
+normals' :: (RandomGen g, Random a, Floating a) => (a,a) -> g -> [a]
 normals' (mean, sigma) g = map (\x -> x * sigma + mean) (normals g)
 
 -- | Analogous to 'mkNormals' but uses the supplied (mean, standard
 -- deviation).
-mkNormals' :: (Random a, Fractional a) => (a,a) -> Int -> [a]
-mkNormals' ms= normals' ms . mkStdGen
+mkNormals' :: (Random a, Floating a) => (a,a) -> Int -> [a]
+mkNormals' ms = normals' ms . mkStdGen
 
 
 -- | Analogous to 'normalIO' but uses the supplied (mean, standard
 -- deviation).
-normalIO' ::(Random a, Fractional a) => (a,a) -> IO a
+normalIO' ::(Random a, Floating a) => (a,a) -> IO a
 normalIO' (mean,sigma) = fmap (\x -> x * sigma + mean) normalIO
 
 -- | Analogous to 'normalsIO' but uses the supplied (mean, standard
 -- deviation).
-normalsIO' :: (Random a, Fractional a) => (a,a) -> IO [a]
+normalsIO' :: (Random a, Floating a) => (a,a) -> IO [a]
 normalsIO' ms = fmap (normals' ms) newStdGen
-
-
--- Helpers
--- -------
--- | Swap the elements in a tuple.
-swap :: (a,b) -> (b,a)
-swap (x,y) = (y,x)
-
--- | Iterate on the accumulator a specified number of times.
-iterateN :: Int -> (acc -> (acc, x)) -> acc -> (acc, [x])
-iterateN n f a0 = mapAccumL (\a _ -> f a) a0 [1..n]
