@@ -39,7 +39,7 @@ Internally the library uses the Box-Muller method to generate
 normally distributed values from uniformly distributed random values.
 If more than one sample is needed taking samples off an infinite
 list (created by e.g. 'normals') will be roughly twice as efficient
-as repetedly generating individual samples with e.g. 'normal'.
+as repeatedly generating individual samples with e.g. 'normal'.
 
 -}
 
@@ -91,20 +91,20 @@ boxMullers _          = []
 -- ===
 -- | Takes a random number generator g, and returns a random value
 -- normally distributed with mean 0 and standard deviation 1,
--- together with a new generator. This function is ananalogous to
+-- together with a new generator. This function is analogous to
 -- 'Random.random'.
 normal :: (RandomGen g, Random a, Floating a) => g -> (a,g)
 normal g0 = (fst $ boxMuller u1 u2, g2)
   -- While The Haskell 98 report says "For fractional types, the
   -- range is normally the semi-closed interval [0,1)" we will
-  -- specify the range explicitely just to be sure.
+  -- specify the range explicitly just to be sure.
   where
      (u1,g1) = randomR (0,1) g0
      (u2,g2) = randomR (0,1) g1
 
 -- | Plural variant of 'normal', producing an infinite list of
 -- random values instead of returning a new generator. This function
--- is ananalogous to 'Random.randoms'.
+-- is analogous to 'Random.randoms'.
 normals :: (RandomGen g, Random a, Floating a) => g -> [a]
 normals = boxMullers . randoms
 

@@ -47,7 +47,7 @@ Description:
     normally distributed values from uniformly distributed random values.
     If more than one sample is needed taking samples off an infinite
     list (created by e.g. 'normals') will be roughly twice as efficient
-    as repetedly generating individual samples with e.g. 'normal'.
+    as repeatedly generating individual samples with e.g. 'normal'.
 
 Category:            Math, Statistics
 Build-Type:          Simple
