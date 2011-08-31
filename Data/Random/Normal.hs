@@ -65,8 +65,8 @@ module Data.Random.Normal (
 
   ) where
 
-import List (mapAccumL)  -- Data.List
-import Random            -- System.Random
+import Data.List (mapAccumL)
+import System.Random
 
 
 -- Normal distribution approximation
